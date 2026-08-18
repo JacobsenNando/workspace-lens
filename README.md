@@ -17,4 +17,3 @@ start after review of the [design specification](docs/superpowers/specs/2026-08-
 ## Status
 
 Design approved; implementation plan pending review.
-

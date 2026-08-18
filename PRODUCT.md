@@ -58,4 +58,3 @@ product assets are required.
 - Progressive disclosure: identity in the bar, detail in the hover panel.
 - Density without clutter through grouping and explicit overflow.
 - Native behavior and theme tokens over a visually isolated custom surface.
-

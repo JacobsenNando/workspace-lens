@@ -5,8 +5,6 @@ import qs.Ui
 PopupCard {
     id: root
 
-    required property Item anchorItem
-    required property QtObject bar
     property var record: null
     readonly property bool scrollable: contentHeight < contentColumn.implicitHeight + verticalContentInset
 
@@ -17,7 +15,7 @@ PopupCard {
 
     component GroupDetails: Column {
         id: groupDetails
-        required property var group
+        required property var modelData
         required property QtObject barHost
         readonly property color foreground: barHost ? barHost.barForeground : Color.foreground
 
@@ -31,15 +29,15 @@ PopupCard {
 
             AppIcon {
                 id: appIcon
-                source: group.icon
-                label: group.name
+                source: groupDetails.modelData.icon
+                label: groupDetails.modelData.name
                 size: Style.space(10)
             }
 
             Text {
                 width: Math.max(0, groupHeader.width - appIcon.width - groupHeader.spacing - countBadge.width - (countBadge.visible ? groupHeader.spacing : 0))
                 anchors.verticalCenter: parent.verticalCenter
-                text: group.name
+                text: groupDetails.modelData.name
                 elide: Text.ElideRight
                 color: groupDetails.foreground
                 font.family: Style.font.family
@@ -49,7 +47,7 @@ PopupCard {
 
             BorderSurface {
                 id: countBadge
-                visible: group.count > 1
+                visible: groupDetails.modelData.count > 1
                 width: visible ? Style.space(8) : 0
                 height: visible ? Style.space(8) : 0
                 anchors.verticalCenter: parent.verticalCenter
@@ -58,7 +56,7 @@ PopupCard {
 
                 Text {
                     anchors.centerIn: parent
-                    text: group.count
+                    text: groupDetails.modelData.count
                     color: groupDetails.foreground
                     font.family: Style.font.family
                     font.pixelSize: Style.font.caption
@@ -69,7 +67,7 @@ PopupCard {
         }
 
         Repeater {
-            model: group.titles
+            model: groupDetails.modelData.titles
 
             Item {
                 id: titleRow
@@ -108,7 +106,6 @@ PopupCard {
         id: contentColumn
         anchors.fill: parent
         spacing: Style.space(5)
-        implicitHeight: header.implicitHeight + (groupsColumn.implicitHeight > 0 ? spacing : 0) + groupsColumn.implicitHeight
 
         Row {
             id: header
@@ -149,7 +146,6 @@ PopupCard {
                     model: root.record ? root.record.groups : []
 
                     GroupDetails {
-                        group: modelData
                         barHost: root.bar
                     }
                 }
@@ -163,7 +159,6 @@ PopupCard {
                 model: root.record ? root.record.groups : []
 
                 delegate: GroupDetails {
-                    group: modelData
                     barHost: root.bar
                 }
             }

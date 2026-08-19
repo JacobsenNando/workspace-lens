@@ -58,15 +58,22 @@ BarWidget {
         return Quickshell.iconPath(icon || appId || "application-x-executable", "application-x-executable");
     }
 
+    function appIdFor(toplevel) {
+        var ipc = toplevel && toplevel.lastIpcObject ? toplevel.lastIpcObject : {};
+        var wayland = toplevel && toplevel.wayland ? toplevel.wayland : null;
+        return String(ipc.class || (wayland ? wayland.appId : "") || "");
+    }
+
     function rawWindows(workspace) {
         var values = workspace && workspace.toplevels ? workspace.toplevels.values : [];
         return values.map(function (toplevel) {
-            var entry = root.desktopEntryFor(toplevel.appId);
+            var appId = root.appIdFor(toplevel);
+            var entry = root.desktopEntryFor(appId);
             return {
-                appId: String(toplevel.appId || ""),
+                appId: appId,
                 title: String(toplevel.title || ""),
                 name: entry ? String(entry.name || "") : "",
-                icon: root.iconSource(entry ? entry.icon : "", toplevel.appId)
+                icon: root.iconSource(entry ? entry.icon : "", appId)
             };
         });
     }

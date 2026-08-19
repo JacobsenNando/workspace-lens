@@ -54,6 +54,8 @@ rm -rf ~/.config/omarchy/plugins/jacobsennando.workspace-lens
 
 ## Status
 
-Implemented and covered by runtime and installer tests; visual validation in a
-live Omarchy session is still pending. The approved design is available in the
+Implemented and verified in a live Omarchy session with real Hyprland windows,
+grouped application counts, overflow, hover crossing, and horizontal and
+vertical bar positions. The durable visual rules live in [DESIGN.md](DESIGN.md),
+and the approved direction remains available in the
 [design specification](docs/superpowers/specs/2026-08-18-workspace-lens-design.md).

@@ -32,7 +32,7 @@ touch "$target/previous-install-marker"
 fake_bin="$test_root/bin"
 mkdir -p "$fake_bin"
 printf '#!/usr/bin/env bash\nexit 0\n' >"$fake_bin/omarchy-shell"
-printf '#!/usr/bin/env bash\nexit 1\n' >"$fake_bin/omarchy"
+printf '#!/usr/bin/env bash\nif [[ ${1:-} == plugin && ${2:-} == list ]]; then printf "jacobsennando.workspace-lens disabled third-party bar-widget Workspace Lens\\n"; exit 0; fi\nexit 1\n' >"$fake_bin/omarchy"
 chmod +x "$fake_bin/omarchy-shell" "$fake_bin/omarchy"
 
 if PATH="$fake_bin:$PATH" WORKSPACE_LENS_INSTALL_ROOT="$test_root/plugins" bash scripts/install.sh; then
@@ -40,6 +40,21 @@ if PATH="$fake_bin:$PATH" WORKSPACE_LENS_INSTALL_ROOT="$test_root/plugins" bash 
   exit 1
 fi
 test -f "$target/previous-install-marker"
+
+delayed_bin="$test_root/delayed-bin"
+delayed_root="$test_root/delayed/plugins"
+enable_attempts="$test_root/enable-attempts"
+mkdir -p "$delayed_bin"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$delayed_bin/omarchy-shell"
+printf '#!/usr/bin/env bash\nif [[ ${1:-} == plugin && ${2:-} == list ]]; then\n  attempts=0\n  if [[ -f "$PLUGIN_ENABLE_ATTEMPTS" ]]; then attempts=$(<"$PLUGIN_ENABLE_ATTEMPTS"); fi\n  attempts=$((attempts + 1))\n  printf "%%s" "$attempts" >"$PLUGIN_ENABLE_ATTEMPTS"\n  if (( attempts >= 3 )); then printf "jacobsennando.workspace-lens disabled third-party bar-widget Workspace Lens\\n"; fi\n  exit 0\nfi\nif [[ ${1:-} == plugin && ${2:-} == enable ]]; then\n  [[ -f "$PLUGIN_ENABLE_ATTEMPTS" ]] && (( $(<"$PLUGIN_ENABLE_ATTEMPTS") >= 3 ))\n  exit\nfi\nexit 1\n' >"$delayed_bin/omarchy"
+chmod +x "$delayed_bin/omarchy-shell" "$delayed_bin/omarchy"
+
+PATH="$delayed_bin:$PATH" \
+  PLUGIN_ENABLE_ATTEMPTS="$enable_attempts" \
+  WORKSPACE_LENS_INSTALL_ROOT="$delayed_root" \
+  bash scripts/install.sh
+test "$(<"$enable_attempts")" = 3
+test -f "$delayed_root/jacobsennando.workspace-lens/manifest.json"
 
 root_probe_bin="$test_root/root-probe-bin"
 mkdir -p "$root_probe_bin"

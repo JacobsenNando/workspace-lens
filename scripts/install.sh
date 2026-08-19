@@ -51,6 +51,22 @@ restore_previous_installation() {
   fi
 }
 
+wait_for_plugin_discovery() {
+  local attempt
+  for ((attempt = 0; attempt < 50; attempt++)); do
+    if omarchy plugin list | awk -v expected="$plugin_id" '
+      $1 == expected { found = 1 }
+      END { exit !found }
+    '; then
+      return 0
+    fi
+    sleep 0.1
+  done
+
+  printf 'Timed out waiting for Omarchy to discover plugin: %s\n' "$plugin_id" >&2
+  return 1
+}
+
 cleanup() {
   local status=$?
   trap - EXIT
@@ -110,6 +126,7 @@ installed=true
 
 if [[ "$enable_plugin" == true ]]; then
   omarchy-shell shell rescanPlugins
+  wait_for_plugin_discovery
   omarchy plugin enable "$plugin_id"
 fi
 

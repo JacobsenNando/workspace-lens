@@ -68,3 +68,30 @@ test("group delegate receives modelData as a required property", () => {
     /GroupDetails\s*\{[\s\S]{0,100}\bgroup:\s*modelData\b/,
   );
 });
+
+test("empty workspace numbers are muted in both orientations", () => {
+  const button = readFileSync("WorkspaceButton.qml", "utf8");
+  const stateOpacity =
+    /opacity:\s*root\.record\.occupied\s*\|\|\s*root\.record\.focused\s*\?\s*1\s*:\s*0\.5/g;
+
+  assert.equal([...button.matchAll(stateOpacity)].length, 2);
+});
+
+test("accessible press and pointer click share workspace activation", () => {
+  const button = readFileSync("WorkspaceButton.qml", "utf8");
+
+  assert.match(button, /function\s+activate\s*\(\)\s*\{/);
+  assert.match(button, /Accessible\.onPressAction:\s*root\.activate\(\)/);
+  assert.match(button, /onClicked:\s*root\.activate\(\)/);
+  assert.equal(
+    [...button.matchAll(/root\.activateRequested\(root\.record\.id\)/g)].length,
+    1,
+  );
+});
+
+test("design documentation scopes multi-monitor behavior honestly", () => {
+  const design = readFileSync("DESIGN.md", "utf8");
+
+  assert.match(design, /Multi-monitor behavior has not been tested/);
+  assert.doesNotMatch(design, /therefore to its originating bar window and monitor/);
+});

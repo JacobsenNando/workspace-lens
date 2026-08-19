@@ -12,6 +12,10 @@ Item {
   signal hoverChanged(Item target, bool hovered)
   signal activateRequested(int workspaceId)
 
+  function activate() {
+    root.activateRequested(root.record.id)
+  }
+
   readonly property int barSize: bar ? bar.barSize : Style.bar.sizeHorizontal
   readonly property int iconSize: Style.space(12)
   readonly property color foreground: bar ? bar.barForeground : Color.foreground
@@ -22,6 +26,7 @@ Item {
   implicitHeight: barSize
   Accessible.role: Accessible.Button
   Accessible.name: "Workspace " + record.id + ", " + record.appCount + " apps, " + record.windowCount + " windows"
+  Accessible.onPressAction: root.activate()
 
   BorderSurface {
     anchors.fill: parent
@@ -56,6 +61,7 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       text: root.record.id === 10 ? "0" : String(root.record.id)
       color: root.foreground
+      opacity: root.record.occupied || root.record.focused ? 1 : 0.5
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
       font.bold: root.record.focused
@@ -120,6 +126,7 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       text: root.record.id === 10 ? "0" : String(root.record.id)
       color: root.foreground
+      opacity: root.record.occupied || root.record.focused ? 1 : 0.5
       font.family: Style.font.family
       font.pixelSize: Style.font.caption
       font.bold: root.record.focused
@@ -176,6 +183,6 @@ Item {
     cursorShape: Qt.PointingHandCursor
     onEntered: root.hoverChanged(root, true)
     onExited: root.hoverChanged(root, false)
-    onClicked: root.activateRequested(root.record.id)
+    onClicked: root.activate()
   }
 }

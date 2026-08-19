@@ -44,9 +44,9 @@ never open a panel.
 
 ## Popover
 
-The detail view is one inherited `PopupCard`, anchored to the hovered target and
-therefore to its originating bar window and monitor. The card opens inward for
-top, bottom, left, and right bars using the popup primitive's native geometry.
+The detail view is one inherited `PopupCard`, anchored to the hovered target.
+The card opens inward for top, bottom, left, and right bars using the popup
+primitive's native geometry.
 
 The header names the workspace and reports application and window totals. Each
 group then shows a `Style.space(10)` icon, application name, optional count, and
@@ -63,7 +63,8 @@ The panel is informational and never activates or closes application windows.
 Workspace ordering and target identity do not change with bar orientation.
 Horizontal bars lay targets in columns; vertical bars stack them in rows. Popup
 placement, screen bounds, and monitor ownership remain the responsibility of
-`PopupCard`.
+`PopupCard`. Multi-monitor behavior has not been tested in the current
+single-monitor environment.
 
 Unknown application IDs and missing titles retain stable layout through model
 fallbacks. Names and titles never widen the card beyond its cap. Live Hyprland

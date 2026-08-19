@@ -33,7 +33,8 @@ surface.
 Workspace Lens has no independent color palette. It consumes the current
 Omarchy `Color` roles at runtime: the bar foreground for text and identity,
 `Color.accent` for focused emphasis and count highlights, and
-`Color.background` for unresolved-icon fallbacks. Selected and hover fills are
+`Color.background` for the final same-size icon safety surface when generic icon
+resolution still produces no loadable image. Selected and hover fills are
 derived through Omarchy's shared `Style` helpers, and border appearance comes
 from the shared `Border` vocabulary.
 
@@ -130,10 +131,14 @@ text marker in the constrained vertical layout.
 ### Application Icon
 
 Each application group renders exactly one desktop-entry icon at a stable,
-device-pixel-ratio-aware size. If resolution fails, a same-size inherited
-background surface shows the first character of the application label, or `?`
-when no character is available. Missing imagery never changes component
-geometry.
+device-pixel-ratio-aware size. If the specific desktop-entry source cannot be
+resolved, the adapter's first fallback is the generic
+`application-x-executable` icon through the Omarchy application library or
+Quickshell icon lookup. Only when the final image source is empty or fails to
+load does `AppIcon` preserve geometry with a same-size inherited background
+surface and the first character of the application label, or `?` when no
+character is available. The initial is a last visual safety net, not a
+replacement for the approved generic icon fallback.
 
 ### Workspace Popover
 
@@ -142,6 +147,16 @@ empty workspaces never open it. Leaving both target and panel starts a 220 ms
 close delay so the pointer can cross the anchor gap. Entering the panel cancels
 that close. If the workspace disappears or becomes empty, pending and active
 popover state is cleared.
+
+The 180/220 ms values are interaction delays, not animation durations. Popover
+opacity, position, and state transitions remain host-owned. When the shell
+exposes a reduced-motion preference or capability, those visual transitions
+must be disabled or reduced. No such API or reduced-motion runtime path was
+available or tested in the current implementation.
+
+**The Conditional Motion Rule.** Reduce or disable popover visual transitions
+when the shell exposes reduced-motion capability; do not claim runtime support
+until that host path exists and is tested.
 
 The header shows the workspace number followed by pluralized application and
 window totals. Each flat group contains an icon, bold application name, optional
@@ -163,6 +178,8 @@ role.
   and failed icon resolution.
 - **Do** rebuild visual records from live Hyprland events so counts and rows do
   not become stale.
+- **Do** reduce or disable popover visual transitions when the host shell
+  exposes reduced-motion capability.
 
 ### Don't:
 

@@ -28,6 +28,13 @@ fi
 
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 plugin_root=${WORKSPACE_LENS_INSTALL_ROOT:-"${HOME:?HOME must be set}"/.config/omarchy/plugins}
+plugin_root=$(realpath -m -- "$plugin_root")
+case "$plugin_root" in
+  /usr/share/omarchy|/usr/share/omarchy/*)
+    printf 'Refusing to install under /usr/share/omarchy: %s\n' "$plugin_root" >&2
+    exit 1
+    ;;
+esac
 target="$plugin_root/$plugin_id"
 staging_dir=""
 backup_dir=""
@@ -72,6 +79,11 @@ for runtime_file in "${runtime_files[@]}"; do
 done
 
 mkdir -p -- "$plugin_root"
+
+if [[ -L "$target" ]]; then
+  printf 'Refusing to replace symlinked plugin target: %s\n' "$target" >&2
+  exit 1
+fi
 
 if [[ -e "$target" ]]; then
   if [[ ! -f "$target/manifest.json" ]] \

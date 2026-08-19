@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-18T22:23:29-03:00",
+  "title": "Design System: Workspace Lens",
+  "extensions": {
+    "motion": [
+      {
+        "name": "hover-open-delay",
+        "value": "180ms",
+        "purpose": "Wait for hover intent before opening detail for an occupied workspace."
+      },
+      {
+        "name": "hover-close-delay",
+        "value": "220ms",
+        "purpose": "Keep detail open while the pointer crosses from its workspace target into the panel."
+      }
+    ],
+    "narrative": {
+      "northStar": "Workspace Lens",
+      "overview": "Workspace Lens is an Operate-mode extension of the Omarchy bar: a compact, application-aware map that helps users recognize where their work lives before they switch. It favors spatial recognition, stable targets, and progressive disclosure over decorative expression.\n\nThe plugin belongs visually to the active Omarchy environment. It inherits the bar's live theme and component language instead of defining a portable palette, type scale, or spacing system of its own. The bar carries identity and status; the hover panel reveals window-level detail without becoming another control surface.",
+      "keyCharacteristics": [
+        "Native to the active Omarchy theme and bar geometry.",
+        "Compact application grouping with bounded overflow.",
+        "Stable numbered targets in every supported orientation.",
+        "One flat, informational detail surface with restrained hierarchy.",
+        "State changes that preserve layout and use more than color alone."
+      ],
+      "rules": [
+        {
+          "name": "The Host Palette Rule",
+          "body": "Use Omarchy color roles and derived fills; never promote a theme's resolved colors into plugin constants.",
+          "section": "colors"
+        },
+        {
+          "name": "The Reinforced Focus Rule",
+          "body": "Communicate the focused workspace with selected surface and border treatments plus an accent edge, never with color alone.",
+          "section": "colors"
+        },
+        {
+          "name": "The Shell Type Rule",
+          "body": "Inherit family and size roles from `Style`; do not introduce fixed font families, pixel sizes, or a plugin-specific type scale.",
+          "section": "typography"
+        },
+        {
+          "name": "The Stable Target Rule",
+          "body": "Hover, focus, grouping, and overflow may change content or surface treatment, but they must not move neighboring workspace targets.",
+          "section": "layout"
+        },
+        {
+          "name": "The Three-Group Rule",
+          "body": "Keep at most three application groups in the bar and represent every additional group with one bounded `+N` label.",
+          "section": "layout"
+        },
+        {
+          "name": "The Single Surface Rule",
+          "body": "Use one inherited popover surface for detail and keep its internal groups flat.",
+          "section": "elevation"
+        },
+        {
+          "name": "The Inherited Geometry Rule",
+          "body": "Derive corners and dimensions from Omarchy `Style` and host geometry; do not introduce fixed radii or bar dimensions.",
+          "section": "shapes"
+        }
+      ],
+      "dos": [
+        "Do consume live Omarchy `Color`, `Style`, `Border`, `BorderSurface`, and `PopupCard` behavior.",
+        "Do preserve numbered targets, deterministic workspace ordering, grouped application identity, and bounded overflow.",
+        "Do keep names and titles single-line, ellipsized, and within the fitted popover bounds.",
+        "Do retain stable geometry for unresolved application IDs, missing titles, and failed icon resolution.",
+        "Do rebuild visual records from live Hyprland events so counts and rows do not become stale."
+      ],
+      "donts": [
+        "Don't hard-code theme colors, font sizes, spacing, radii, or bar dimensions.",
+        "Don't render one icon per window or allow the bar summary to exceed three application groups.",
+        "Don't create nested cards inside the popover.",
+        "Don't move targets on hover or reduce focused state to color alone.",
+        "Don't make application or title rows actionable in the informational first release.",
+        "Don't poll `hyprctl` for workspace state; consume Quickshell's live Hyprland models."
+      ]
+    }
+  }
+}

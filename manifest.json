@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "jacobsennando.workspace-lens",
+  "name": "Workspace Lens",
+  "version": "0.1.0",
+  "author": "JacobsenNando",
+  "description": "Grouped application icons and hover details for Hyprland workspaces",
+  "kinds": ["bar-widget"],
+  "entryPoints": { "barWidget": "BarWidget.qml" },
+  "barWidget": {
+    "displayName": "Workspace Lens",
+    "description": "See grouped applications in every workspace",
+    "category": "Compositor",
+    "allowMultiple": false
+  },
+  "omarchy": { "clonedFrom": "omarchy.workspaces" }
+}

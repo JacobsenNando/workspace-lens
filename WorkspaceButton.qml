@@ -12,6 +12,26 @@ Item {
   signal hoverChanged(Item target, bool hovered)
   signal activateRequested(int workspaceId)
 
+  // Bar click-target contract (see Ui/WidgetButton.qml): the bar host routes
+  // left presses to registered targets, so clicks behave like the built-in
+  // widget. Any button focuses the workspace, as in the built-in widget.
+  property var registeredBar: null
+
+  function triggerPress(button) {
+    if (root.bar) root.bar.hideTooltip(root)
+    root.activate()
+  }
+
+  function syncClickRegistration() {
+    if (registeredBar && registeredBar.unregisterClickTarget) registeredBar.unregisterClickTarget(root)
+    registeredBar = root.bar
+    if (registeredBar && registeredBar.registerClickTarget) registeredBar.registerClickTarget(root)
+  }
+
+  onBarChanged: syncClickRegistration()
+  Component.onCompleted: syncClickRegistration()
+  Component.onDestruction: if (registeredBar && registeredBar.unregisterClickTarget) registeredBar.unregisterClickTarget(root)
+
   readonly property int barSize: bar ? bar.barSize : Style.bar.sizeHorizontal
   readonly property int iconSize: Style.space(12)
   readonly property color foreground: bar ? bar.barForeground : Color.foreground
@@ -54,16 +74,17 @@ Item {
     id: horizontalContent
     visible: !root.vertical
     anchors.centerIn: parent
-    spacing: Style.space(3)
+    spacing: Style.space(4)
 
     Text {
       width: Style.space(8)
+      anchors.verticalCenter: parent.verticalCenter
       horizontalAlignment: Text.AlignHCenter
       text: root.record.id === 10 ? "0" : String(root.record.id)
       color: root.foreground
       opacity: root.record.occupied || root.record.focused ? 1 : 0.5
       font.family: Style.font.family
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Style.font.body
       font.bold: root.record.focused
       Accessible.ignored: true
     }
@@ -75,11 +96,13 @@ Item {
         required property var modelData
         width: icon.implicitWidth
         height: icon.implicitHeight
+        anchors.verticalCenter: parent.verticalCenter
 
         AppIcon {
           id: icon
           source: modelData.icon
           label: modelData.name
+          foreground: root.foreground
           size: root.iconSize
         }
 
@@ -96,7 +119,7 @@ Item {
           Text {
             anchors.centerIn: parent
             text: modelData.count
-            color: Color.foreground
+            color: Color.background
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             Accessible.ignored: true
@@ -107,6 +130,7 @@ Item {
 
     Text {
       visible: root.record.overflowCount > 0
+      anchors.verticalCenter: parent.verticalCenter
       text: "+" + root.record.overflowCount
       color: root.foreground
       font.family: Style.font.family
@@ -128,7 +152,7 @@ Item {
       color: root.foreground
       opacity: root.record.occupied || root.record.focused ? 1 : 0.5
       font.family: Style.font.family
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Style.font.body
       font.bold: root.record.focused
       Accessible.ignored: true
     }
@@ -149,18 +173,28 @@ Item {
             id: icon
             source: modelData.icon
             label: modelData.name
+            foreground: root.foreground
             size: Style.space(8)
           }
 
-          Text {
+          BorderSurface {
             visible: modelData.count > 1
+            width: Style.space(6)
+            height: Style.space(6)
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            text: modelData.count
+            radius: width / 2
             color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.caption
             Accessible.ignored: true
+
+            Text {
+              anchors.centerIn: parent
+              text: modelData.count
+              color: Color.background
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              Accessible.ignored: true
+            }
           }
         }
       }
@@ -176,13 +210,16 @@ Item {
     }
   }
 
+  // Left presses arrive through the bar host via triggerPress(); the host
+  // only accepts the left button, so right and middle are handled here.
   MouseArea {
     id: mouse
     anchors.fill: parent
     hoverEnabled: true
+    acceptedButtons: Qt.RightButton | Qt.MiddleButton
     cursorShape: Qt.PointingHandCursor
     onEntered: root.hoverChanged(root, true)
     onExited: root.hoverChanged(root, false)
-    onClicked: root.activate()
+    onClicked: function(mouse) { root.triggerPress(mouse.button) }
   }
 }

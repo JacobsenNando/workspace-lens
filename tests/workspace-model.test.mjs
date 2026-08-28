@@ -8,25 +8,71 @@ test("normalizes desktop ids", () => {
   assert.equal(model.normalizeAppId("  Org.GNOME.Nautilus.desktop  "), "org.gnome.nautilus");
 });
 
-test("prefers the Hyprland IPC class for Brave web apps", () => {
+test("prefers the Hyprland IPC class over the Wayland app id", () => {
   const toplevel = {
-    appId: "brave-browser",
-    HyprlandToplevel: {
-      handle: { lastIpcObject: { class: "brave-discord.com__channels_@me-Default" } }
-    }
+    lastIpcObject: { class: "brave-discord.com__channels_@me-Default" },
+    wayland: { appId: "brave-browser" }
   };
   assert.equal(model.hyprlandAppId(toplevel), "brave-discord.com__channels_@me-Default");
+  assert.equal(model.hyprlandAppId({ wayland: { appId: "kitty" } }), "kitty");
+  assert.equal(model.hyprlandAppId(null), "");
 });
 
-test("resolves system icons for WhatsApp and Discord Brave web apps", () => {
-  assert.equal(
-    model.webAppIconPath("brave-web.whatsapp.com__-Default"),
-    "/usr/share/icons/hicolor/256x256/apps/whatsapp.png"
-  );
-  assert.equal(
-    model.webAppIconPath("brave-discord.com__channels_@me-Default"),
-    "/usr/share/icons/hicolor/256x256/apps/omarchy-discord.png"
-  );
+test("extracts the site host from browser web-app classes", () => {
+  assert.equal(model.webAppHost("brave-web.whatsapp.com__-Default"), "web.whatsapp.com");
+  assert.equal(model.webAppHost("brave-discord.com__channels_@me-Default"), "discord.com");
+  assert.equal(model.webAppHost("chrome-www.youtube.com__-Default"), "youtube.com");
+  assert.equal(model.webAppHost("brave-browser"), "");
+  assert.equal(model.webAppHost("kitty"), "");
+});
+
+test("matches a web-app class to the desktop entry launching that site", () => {
+  const entries = [
+    { name: "YouTube", icon: "youtube", execString: "omarchy-launch-webapp https://youtube.com/" },
+    { name: "WhatsApp", icon: "whatsapp", execString: "omarchy-launch-webapp https://web.whatsapp.com/" },
+    { name: "Ghostty", icon: "ghostty", execString: "ghostty" },
+    null
+  ];
+  assert.equal(model.findWebAppEntry("web.whatsapp.com", entries).name, "WhatsApp");
+  assert.equal(model.findWebAppEntry("www.youtube.com", entries).name, "YouTube");
+  assert.equal(model.findWebAppEntry("example.com", entries), null);
+  assert.equal(model.findWebAppEntry("", entries), null);
+  assert.equal(model.findWebAppEntry("youtube.com", undefined), null);
+});
+
+test("matches handler-launched web apps by slug, preferring a URL match", () => {
+  const entries = [
+    { name: "HEY", icon: "hey", execString: "omarchy-webapp-handler-hey %u" },
+    { name: "Zoom", icon: "zoom", execString: "omarchy-webapp-handler-zoom %u" },
+    { name: "HEY Calendar", icon: "hey", execString: "omarchy-launch-webapp https://app.hey.com/calendar" }
+  ];
+  assert.equal(model.findWebAppEntry("app.hey.com", entries).name, "HEY Calendar");
+  assert.equal(model.findWebAppEntry("hey.com", entries).name, "HEY");
+  assert.equal(model.findWebAppEntry("app.zoom.us", entries).name, "Zoom");
+  assert.equal(model.findWebAppEntry("zoom", entries), null);
+  assert.equal(model.findWebAppEntry("chatgpt.com", entries), null);
+});
+
+test("refreshes only on Hyprland events that change workspace contents", () => {
+  for (const name of ["openwindow", "closewindow", "movewindowv2", "windowtitlev2", "workspacev2", "focusedmonv2", "destroyworkspacev2"]) {
+    assert.equal(model.isWorkspaceEvent(name), true, name);
+  }
+  for (const name of ["activelayout", "submap", "monitoradded", "screencast", "", undefined]) {
+    assert.equal(model.isWorkspaceEvent(name), false, String(name));
+  }
+});
+
+test("tolerates missing windows, zero summary and string ids", () => {
+  const record = model.buildWorkspace("3", undefined, 3, 0);
+  assert.equal(record.id, 3);
+  assert.equal(record.focused, true);
+  assert.equal(record.occupied, false);
+  assert.equal(record.summaryGroups.length, 0);
+  assert.equal(record.overflowCount, 0);
+
+  const capped = model.buildWorkspace(1, [{ appId: "a" }, { appId: "b" }], 2, 0);
+  assert.equal(capped.summaryGroups.length, 0);
+  assert.equal(capped.overflowCount, 2);
 });
 
 test("builds an empty persistent workspace", () => {
@@ -85,4 +131,15 @@ test("derives safe fallbacks for missing metadata", () => {
   assert.equal(result.groups[0].name, "Unknown Tool");
   assert.equal(result.groups[1].name, "My Tool");
   assert.equal(result.groups[1].titles[0], "My Tool");
+});
+
+test("strips the app-name suffix from window titles", () => {
+  assert.equal(model.stripAppSuffix("unslop \u2014 cursor/plugins - Brave", "Brave"), "unslop \u2014 cursor/plugins");
+  assert.equal(model.stripAppSuffix("Inbox | HEY", "HEY"), "Inbox");
+  assert.equal(model.stripAppSuffix("Brave", "Brave"), "Brave");
+  assert.equal(model.stripAppSuffix("A - Brave - Brave", "brave"), "A - Brave");
+  assert.equal(model.stripAppSuffix("Untitled - Other", "Brave"), "Untitled - Other");
+  assert.equal(model.stripAppSuffix("x - Brave", ""), "x - Brave");
+  const record = model.buildWorkspace(1, [{ appId: "brave-browser", name: "Brave", title: "Docs - Brave" }], 1, 3);
+  assert.deepEqual([...record.groups[0].titles], ["Docs"]);
 });

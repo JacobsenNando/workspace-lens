@@ -11,10 +11,17 @@ BarWidget {
   moduleName: "jacobsennando.workspace-lens"
 
   property int refreshSerial: 0
+  // appId -> { name, iconName }. Desktop-entry lookups are the expensive part
+  // of a refresh and only change with the application list. The icon *path*
+  // is resolved on every refresh so the shell's icon index stays reactive.
+  property var metadataCache: Object.create(null)
   property Item pendingAnchor: null
   property var pendingRecord: null
   property Item activeAnchor: null
   property var activeRecord: null
+  // Last shown anchor/record, kept while the popover fades out.
+  property Item fadingAnchor: null
+  property var fadingRecord: null
   readonly property real trailingGap: root.vertical ? 0 : Style.spaceReal(1.5)
 
   function workspaceById(id) {
@@ -38,11 +45,14 @@ BarWidget {
 
   function desktopEntryFor(appId) {
     var raw = String(appId || "").trim()
+    if (!raw) return null
     var candidates = [raw, raw.replace(/\.desktop$/i, "")]
     for (var i = 0; i < candidates.length; i++) {
       var entry = DesktopEntries.byId(candidates[i])
       if (entry) return entry
     }
+    var host = WorkspaceModel.webAppHost(raw)
+    if (host) return WorkspaceModel.findWebAppEntry(host, DesktopEntries.applications.values)
     return null
   }
 
@@ -52,25 +62,29 @@ BarWidget {
     return Quickshell.iconPath(icon || appId || "application-x-executable", "application-x-executable")
   }
 
-  function systemIconPath(appId) {
-    return WorkspaceModel.webAppIconPath(appId)
-  }
-
-  function appIdFor(toplevel) {
-    return WorkspaceModel.hyprlandAppId(toplevel)
+  function metadataFor(appId) {
+    var key = String(appId || "")
+    var cached = root.metadataCache[key]
+    if (cached) return cached
+    var entry = root.desktopEntryFor(key)
+    var meta = {
+      name: entry ? String(entry.name || "") : "",
+      iconName: entry ? String(entry.icon || "") : ""
+    }
+    root.metadataCache[key] = meta
+    return meta
   }
 
   function rawWindows(workspace) {
     var values = workspace && workspace.toplevels ? workspace.toplevels.values : []
     return values.map(function(toplevel) {
-      var appId = root.appIdFor(toplevel)
-      var entry = root.desktopEntryFor(appId)
-      var systemIcon = root.systemIconPath(appId)
+      var appId = WorkspaceModel.hyprlandAppId(toplevel)
+      var meta = root.metadataFor(appId)
       return {
         appId: appId,
         title: String(toplevel.title || ""),
-        name: entry ? String(entry.name || "") : "",
-        icon: root.iconSource(entry ? entry.icon : systemIcon, appId)
+        name: meta.name,
+        icon: root.iconSource(meta.iconName, appId)
       }
     })
   }
@@ -83,9 +97,8 @@ BarWidget {
   }
 
   function focusWorkspace(id) {
-    var workspace = root.workspaceById(id)
-    if (workspace) workspace.activate()
-    else if (root.bar) root.bar.run("hyprctl dispatch " + Util.shellQuote("hl.dsp.focus({ workspace = \"" + id + "\" })"))
+    if (!root.bar) return
+    root.bar.run("hyprctl dispatch " + Util.shellQuote("hl.dsp.focus({ workspace = \"" + id + "\" })"))
   }
 
   function requestPopover(target, record) {
@@ -109,6 +122,11 @@ BarWidget {
     closeTimer.stop()
     pendingAnchor = null
     pendingRecord = null
+    if (activeAnchor !== null) {
+      fadingAnchor = activeAnchor
+      fadingRecord = activeRecord
+      unloadTimer.restart()
+    }
     activeAnchor = null
     activeRecord = null
   }
@@ -140,7 +158,18 @@ BarWidget {
   Connections {
     target: Hyprland
     function onRawEvent(event) {
+      if (!WorkspaceModel.isWorkspaceEvent(event.name)) return
       root.refreshSerial++
+      root.refreshPopoverRecords()
+    }
+  }
+
+  Connections {
+    target: DesktopEntries
+    function onApplicationsChanged() {
+      // Assigning a new object re-evaluates every record binding; the popover
+      // holds snapshots, so refresh those explicitly.
+      root.metadataCache = Object.create(null)
       root.refreshPopoverRecords()
     }
   }
@@ -150,6 +179,7 @@ BarWidget {
     interval: 180
     onTriggered: {
       if (!root.pendingAnchor || !root.pendingRecord || !root.pendingRecord.occupied) return
+      unloadTimer.stop()
       root.activeAnchor = root.pendingAnchor
       root.activeRecord = root.pendingRecord
     }
@@ -161,14 +191,27 @@ BarWidget {
     onTriggered: root.closePopover()
   }
 
+  // Outlives the PopupCard fade (140 ms) so the card can animate out.
+  Timer {
+    id: unloadTimer
+    interval: 200
+    onTriggered: {
+      root.fadingAnchor = null
+      root.fadingRecord = null
+    }
+  }
+
   Loader {
     id: popoverLoader
-    active: root.activeAnchor !== null && root.activeRecord !== null && root.activeRecord.occupied
+    readonly property Item shownAnchor: root.activeAnchor || root.fadingAnchor
+    readonly property var shownRecord: root.activeRecord || root.fadingRecord
+    active: shownAnchor !== null && shownRecord !== null
 
     sourceComponent: WorkspacePopover {
-      anchorItem: root.activeAnchor
+      anchorItem: popoverLoader.shownAnchor
       bar: root.bar
-      record: root.activeRecord
+      record: popoverLoader.shownRecord
+      open: root.activeAnchor !== null && root.activeRecord !== null && root.activeRecord.occupied
       onContainsMouseChanged: {
         if (containsMouse) closeTimer.stop()
         else if (root.activeAnchor !== null) closeTimer.restart()

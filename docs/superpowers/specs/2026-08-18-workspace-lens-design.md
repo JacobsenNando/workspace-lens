@@ -1,7 +1,6 @@
 # Workspace Lens Design
 
-Status: approved in conversation on 2026-08-18; awaiting review of this written
-specification before implementation planning.
+Status: approved on 2026-08-18 and implemented; kept as the design reference.
 
 ## 1. Problem and outcome
 

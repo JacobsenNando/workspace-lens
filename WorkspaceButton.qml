@@ -80,6 +80,7 @@ Item {
 
     Text {
       width: Style.space(8)
+      anchors.verticalCenter: parent.verticalCenter
       horizontalAlignment: Text.AlignHCenter
       text: root.record.id === 10 ? "0" : String(root.record.id)
       color: root.foreground
@@ -97,6 +98,7 @@ Item {
         required property var modelData
         width: icon.implicitWidth
         height: icon.implicitHeight
+        anchors.verticalCenter: parent.verticalCenter
 
         AppIcon {
           id: icon
@@ -129,6 +131,7 @@ Item {
 
     Text {
       visible: root.record.overflowCount > 0
+      anchors.verticalCenter: parent.verticalCenter
       text: "+" + root.record.overflowCount
       color: root.foreground
       font.family: Style.font.family

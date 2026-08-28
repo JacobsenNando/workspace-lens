@@ -132,3 +132,14 @@ test("derives safe fallbacks for missing metadata", () => {
   assert.equal(result.groups[1].name, "My Tool");
   assert.equal(result.groups[1].titles[0], "My Tool");
 });
+
+test("strips the app-name suffix from window titles", () => {
+  assert.equal(model.stripAppSuffix("unslop \u2014 cursor/plugins - Brave", "Brave"), "unslop \u2014 cursor/plugins");
+  assert.equal(model.stripAppSuffix("Inbox | HEY", "HEY"), "Inbox");
+  assert.equal(model.stripAppSuffix("Brave", "Brave"), "Brave");
+  assert.equal(model.stripAppSuffix("A - Brave - Brave", "brave"), "A - Brave");
+  assert.equal(model.stripAppSuffix("Untitled - Other", "Brave"), "Untitled - Other");
+  assert.equal(model.stripAppSuffix("x - Brave", ""), "x - Brave");
+  const record = model.buildWorkspace(1, [{ appId: "brave-browser", name: "Brave", title: "Docs - Brave" }], 1, 3);
+  assert.deepEqual([...record.groups[0].titles], ["Docs"]);
+});

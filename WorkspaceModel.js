@@ -92,6 +92,22 @@ function findWebAppEntry(host, entries) {
   return byHandler;
 }
 
+// Browsers and many apps append " - AppName" to the window title; the group
+// header already names the app, so the suffix only repeats it.
+function stripAppSuffix(title, name) {
+  var value = text(title);
+  var app = text(name);
+  if (!value || !app) return value;
+  var lower = value.toLowerCase();
+  var suffixes = [" - ", " \u2014 ", " \u2013 ", " | "];
+  for (var i = 0; i < suffixes.length; i++) {
+    var suffix = suffixes[i] + app.toLowerCase();
+    if (lower.length > suffix.length && lower.slice(-suffix.length) === suffix)
+      return value.slice(0, value.length - suffix.length).trim();
+  }
+  return value;
+}
+
 function fallbackName(appId) {
   var value = normalizeAppId(appId);
   var leaf = value.split(".").pop() || "application";
@@ -119,7 +135,7 @@ function buildWorkspace(id, windows, focusedId, maxSummary) {
       groups.push(group);
     }
     group.count += 1;
-    group.titles.push(title || group.name);
+    group.titles.push(stripAppSuffix(title, group.name) || group.name);
   }
 
   return {

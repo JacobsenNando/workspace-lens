@@ -17,94 +17,104 @@ PopupCard {
   contentWidth: fittedContentWidth(Style.space(340), Style.space(420))
   contentHeight: fittedContentHeight(contentColumn.implicitHeight, Style.space(520))
 
-  component GroupDetails: Column {
+  component GroupDetails: BorderSurface {
     id: groupDetails
 
     required property var modelData
     required property QtObject barHost
 
     readonly property color foreground: barHost ? barHost.barForeground : Color.foreground
+    readonly property int inset: Style.space(4)
 
     width: ListView.view ? ListView.view.width : parent.width
-    spacing: Style.space(2)
+    height: groupRow.implicitHeight + inset * 2
+    radius: Style.cornerRadius
+    color: Util.alpha(foreground, 0.06)
 
     Row {
-      id: groupHeader
-      width: parent.width
-      spacing: Style.space(3)
+      id: groupRow
+      x: groupDetails.inset
+      y: groupDetails.inset
+      width: parent.width - groupDetails.inset * 2
+      spacing: Style.space(4)
 
       AppIcon {
         id: appIcon
         source: groupDetails.modelData.icon
         label: groupDetails.modelData.name
         foreground: groupDetails.foreground
-        size: Style.space(10)
+        size: Style.space(13)
       }
 
-      Text {
-        width: Math.max(0, groupHeader.width - appIcon.width - groupHeader.spacing - countBadge.width - (countBadge.visible ? groupHeader.spacing : 0))
-        anchors.verticalCenter: parent.verticalCenter
-        text: groupDetails.modelData.name
-        elide: Text.ElideRight
-        color: groupDetails.foreground
-        font.family: Style.font.family
-        font.pixelSize: Style.font.body
-        font.bold: true
-      }
+      Column {
+        id: groupBody
+        width: groupRow.width - appIcon.width - groupRow.spacing
+        spacing: Style.space(1)
 
-      BorderSurface {
-        id: countBadge
-        visible: groupDetails.modelData.count > 1
-        width: visible ? Style.space(8) : 0
-        height: visible ? Style.space(8) : 0
-        anchors.verticalCenter: parent.verticalCenter
-        color: Style.selectedFillFor(groupDetails.foreground, Color.accent)
-        radius: width / 2
-        Accessible.ignored: true
+        Item {
+          width: parent.width
+          height: groupName.implicitHeight
 
-        Text {
-          anchors.centerIn: parent
-          text: groupDetails.modelData.count
-          color: groupDetails.foreground
-          font.family: Style.font.family
-          font.pixelSize: Style.font.caption
-          Accessible.ignored: true
-        }
-      }
-    }
+          Text {
+            id: groupName
+            anchors.left: parent.left
+            anchors.right: groupCount.left
+            anchors.rightMargin: Style.space(3)
+            text: groupDetails.modelData.name
+            elide: Text.ElideRight
+            color: groupDetails.foreground
+            font.family: Style.font.family
+            font.pixelSize: Style.font.body
+            font.bold: true
+          }
 
-    Repeater {
-      model: groupDetails.modelData.titles
-
-      Item {
-        id: titleRow
-
-        required property string modelData
-        width: parent.width
-        height: titleLabel.implicitHeight
-
-        Text {
-          id: titleLabel
-          anchors.left: parent.left
-          anchors.right: parent.right
-          anchors.leftMargin: Style.space(13)
-          text: titleRow.modelData
-          elide: Text.ElideRight
-          color: groupDetails.foreground
-          font.family: Style.font.family
-          font.pixelSize: Style.font.bodySmall
-          Accessible.name: text
+          Text {
+            id: groupCount
+            anchors.right: parent.right
+            anchors.baseline: groupName.baseline
+            text: groupDetails.modelData.count + (groupDetails.modelData.count === 1 ? " window" : " windows")
+            color: groupDetails.foreground
+            opacity: 0.65
+            font.family: Style.font.family
+            font.pixelSize: Style.font.bodySmall
+            Accessible.ignored: true
+          }
         }
 
-        MouseArea {
-          id: titleHover
-          anchors.fill: parent
-          hoverEnabled: true
-          acceptedButtons: Qt.NoButton
-          onEntered: if (titleLabel.truncated && groupDetails.barHost)
-            groupDetails.barHost.showTooltip(titleHover, titleLabel.text)
-          onExited: if (groupDetails.barHost)
-            groupDetails.barHost.hideTooltip(titleHover)
+        Repeater {
+          model: groupDetails.modelData.titles
+
+          Item {
+            id: titleRow
+
+            required property string modelData
+            width: parent.width
+            height: titleLabel.implicitHeight
+
+            Text {
+              id: titleLabel
+              anchors.left: parent.left
+              anchors.right: parent.right
+              text: titleRow.modelData
+              elide: Text.ElideRight
+              color: groupDetails.foreground
+              opacity: 0.75
+              font.family: Style.font.family
+              font.pixelSize: Style.font.bodySmall
+              Accessible.name: text
+            }
+
+            MouseArea {
+              id: titleHover
+              anchors.fill: parent
+              hoverEnabled: true
+              acceptedButtons: Qt.NoButton
+              onEntered: if (titleLabel.truncated && groupDetails.barHost)
+                groupDetails.barHost.showTooltip(titleHover, titleLabel.text)
+              onExited: if (groupDetails.barHost)
+                groupDetails.barHost.hideTooltip(titleHover)
+            }
+          }
         }
       }
     }
@@ -115,12 +125,14 @@ PopupCard {
     anchors.fill: parent
     spacing: Style.space(5)
 
-    Row {
+    Item {
       id: header
       width: parent.width
-      spacing: Style.space(4)
+      height: headerTitle.implicitHeight
 
       Text {
+        id: headerTitle
+        anchors.left: parent.left
         text: root.record ? "Workspace " + root.record.id : ""
         color: root.bar ? root.bar.barForeground : Color.foreground
         font.family: Style.font.family
@@ -129,9 +141,11 @@ PopupCard {
       }
 
       Text {
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        anchors.baseline: headerTitle.baseline
         text: root.record ? root.record.appCount + (root.record.appCount === 1 ? " app" : " apps") + " · " + root.record.windowCount + (root.record.windowCount === 1 ? " window" : " windows") : ""
         color: root.bar ? root.bar.barForeground : Color.foreground
+        opacity: 0.65
         font.family: Style.font.family
         font.pixelSize: Style.font.bodySmall
         Accessible.ignored: true
@@ -148,7 +162,7 @@ PopupCard {
         id: groupsColumn
         visible: !root.scrollable
         width: parent.width
-        spacing: Style.space(5)
+        spacing: Style.space(3)
 
         Repeater {
           model: root.record ? root.record.groups : []
@@ -163,7 +177,7 @@ PopupCard {
         visible: root.scrollable
         anchors.fill: parent
         clip: true
-        spacing: Style.space(5)
+        spacing: Style.space(3)
         model: root.record ? root.record.groups : []
 
         delegate: GroupDetails {

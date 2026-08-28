@@ -3,7 +3,7 @@
 Workspace Lens is an Omarchy Shell widget that makes applications in each
 Hyprland workspace visible directly from the bar.
 
-![Workspace Lens showing the workspace hover panel](preview.png)
+![Workspace Lens showing the workspace hover panel and icons on top bar](preview.png)
 
 ## Requirements
 

@@ -12,6 +12,28 @@ Item {
   signal hoverChanged(Item target, bool hovered)
   signal activateRequested(int workspaceId)
 
+  // Bar click-target contract (see Ui/WidgetButton.qml): the bar host routes
+  // presses to registered targets, so clicks behave like the built-in widget.
+  property bool interactive: true
+  property bool pressable: true
+  property bool concealed: false
+  property var registeredBar: null
+
+  function triggerPress(button) {
+    if (root.bar) root.bar.hideTooltip(root)
+    if (root.pressable) root.activate()
+  }
+
+  function syncClickRegistration() {
+    if (registeredBar && registeredBar.unregisterClickTarget) registeredBar.unregisterClickTarget(root)
+    registeredBar = root.bar
+    if (registeredBar && registeredBar.registerClickTarget) registeredBar.registerClickTarget(root)
+  }
+
+  onBarChanged: syncClickRegistration()
+  Component.onCompleted: syncClickRegistration()
+  Component.onDestruction: if (registeredBar && registeredBar.unregisterClickTarget) registeredBar.unregisterClickTarget(root)
+
   readonly property int barSize: bar ? bar.barSize : Style.bar.sizeHorizontal
   readonly property int iconSize: Style.space(12)
   readonly property color foreground: bar ? bar.barForeground : Color.foreground
@@ -54,7 +76,7 @@ Item {
     id: horizontalContent
     visible: !root.vertical
     anchors.centerIn: parent
-    spacing: Style.space(3)
+    spacing: Style.space(4)
 
     Text {
       width: Style.space(8)
@@ -63,7 +85,7 @@ Item {
       color: root.foreground
       opacity: root.record.occupied || root.record.focused ? 1 : 0.5
       font.family: Style.font.family
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Style.font.body
       font.bold: root.record.focused
       Accessible.ignored: true
     }
@@ -90,13 +112,13 @@ Item {
           anchors.right: parent.right
           anchors.bottom: parent.bottom
           radius: width / 2
-          color: Color.accent
+          color: Style.selectedFillFor(root.foreground, Color.accent)
           Accessible.ignored: true
 
           Text {
             anchors.centerIn: parent
             text: modelData.count
-            color: Color.foreground
+            color: root.foreground
             font.family: Style.font.family
             font.pixelSize: Style.font.caption
             Accessible.ignored: true
@@ -128,7 +150,7 @@ Item {
       color: root.foreground
       opacity: root.record.occupied || root.record.focused ? 1 : 0.5
       font.family: Style.font.family
-      font.pixelSize: Style.font.caption
+      font.pixelSize: Style.font.body
       font.bold: root.record.focused
       Accessible.ignored: true
     }
@@ -176,13 +198,14 @@ Item {
     }
   }
 
+  // Hover only; presses arrive through the bar host via triggerPress().
   MouseArea {
     id: mouse
     anchors.fill: parent
     hoverEnabled: true
+    acceptedButtons: Qt.NoButton
     cursorShape: Qt.PointingHandCursor
     onEntered: root.hoverChanged(root, true)
     onExited: root.hoverChanged(root, false)
-    onClicked: root.activate()
   }
 }

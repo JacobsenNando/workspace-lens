@@ -28,7 +28,7 @@ Item {
   BorderSurface {
     anchors.fill: parent
     visible: !root.source || image.status === Image.Error
-    color: Color.surface
+    color: Style.hoverFillFor(Color.foreground, Color.accent)
     radius: Style.cornerRadius
 
     Text {

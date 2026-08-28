@@ -19,17 +19,18 @@ Install and enable the public plugin with:
 omarchy plugin add https://github.com/JacobsenNando/workspace-lens.git --enable
 ```
 
-From a checkout of this repository, install the plugin into your user plugin
-directory with:
+From a checkout of this repository, the same command accepts a local path and
+keeps the install updatable with `omarchy plugin update`:
 
 ```bash
-bash scripts/install.sh
+omarchy plugin add ~/Projects/workspace-lens --enable
 ```
 
-The installer writes only to
+`scripts/install.sh` copies only the runtime files into
 `~/.config/omarchy/plugins/jacobsennando.workspace-lens` (or the isolated
-`WORKSPACE_LENS_INSTALL_ROOT` used by tests). It safely replaces a previous
-Workspace Lens installation, but refuses to overwrite an unknown plugin.
+`WORKSPACE_LENS_INSTALL_ROOT` used by tests) for quick local iteration. It
+validates the staged plugin, replaces a previous copy it made, and refuses to
+overwrite an unknown plugin or a checkout managed by `omarchy plugin add`.
 
 Activation rescans Omarchy Shell plugins and enables Workspace Lens. Its
 manifest metadata declares that it replaces `omarchy.workspaces`, so Omarchy
@@ -52,16 +53,16 @@ Run the automated checks with:
 node --test tests/*.test.mjs && bash tests/install.test.sh
 ```
 
-To remove the plugin safely, disable it first, then remove only its exact user
-plugin directory:
+To remove the plugin, disable it and delete its directory in one step:
 
 ```bash
-omarchy plugin disable jacobsennando.workspace-lens
-rm -rf ~/.config/omarchy/plugins/jacobsennando.workspace-lens
+omarchy plugin remove jacobsennando.workspace-lens
 ```
 
-## Status
+Web apps installed with `omarchy webapp install` show their own icon: the
+window class names the site, and the desktop entry that launches that site
+supplies the name and icon.
 
-Implemented, with automated installer and model checks. The WhatsApp and
-Discord web-app icons were visually verified after restarting Omarchy Shell.
-The approved direction is in the [design specification](docs/superpowers/specs/2026-08-18-workspace-lens-design.md).
+The approved direction is in the
+[design specification](docs/superpowers/specs/2026-08-18-workspace-lens-design.md);
+changes are tracked in [CHANGELOG.md](CHANGELOG.md).

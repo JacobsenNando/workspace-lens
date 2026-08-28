@@ -11,7 +11,6 @@ PopupCard {
   triggerMode: "hover"
   contentWidth: fittedContentWidth(Style.space(340), Style.space(420))
   contentHeight: fittedContentHeight(contentColumn.implicitHeight, Style.space(520))
-  open: record !== null
 
   component GroupDetails: Column {
     id: groupDetails

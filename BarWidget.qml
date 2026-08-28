@@ -167,8 +167,10 @@ BarWidget {
   Connections {
     target: DesktopEntries
     function onApplicationsChanged() {
-      // Assigning a new object re-evaluates every record binding.
+      // Assigning a new object re-evaluates every record binding; the popover
+      // holds snapshots, so refresh those explicitly.
       root.metadataCache = Object.create(null)
+      root.refreshPopoverRecords()
     }
   }
 

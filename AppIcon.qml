@@ -37,6 +37,7 @@ Item {
     Text {
       anchors.centerIn: parent
       text: root.label.slice(0, 1).toUpperCase() || "?"
+      textFormat: Text.PlainText
       color: root.foreground
       font.family: Style.font.family
       font.pixelSize: Math.max(1, Math.round(root.size * 0.65))

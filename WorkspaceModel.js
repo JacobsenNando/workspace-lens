@@ -60,19 +60,36 @@ function execHost(execString) {
   return match ? stripWww(match[1].toLowerCase()) : "";
 }
 
-// Omarchy web apps are desktop entries whose Exec launches the site URL.
-// Match the class host against that URL so every installed web app resolves
-// to its own name and icon without a hand-written table.
+// Some Omarchy web apps launch through "omarchy-webapp-handler-<slug> %u"
+// instead of a literal URL (HEY, Zoom). The slug names the site.
+function execHandlerSlug(execString) {
+  var match = /omarchy-webapp-handler-([a-z0-9-]+)/i.exec(text(execString));
+  return match ? match[1].toLowerCase() : "";
+}
+
+function hostHasLabel(host, label) {
+  if (!label) return false;
+  var labels = host.split(".");
+  labels.pop(); // never match the TLD
+  return labels.indexOf(label) !== -1;
+}
+
+// Omarchy web apps are desktop entries whose Exec launches the site, either
+// as a literal URL or through a handler script. Match the window-class host
+// against that so installed web apps resolve to their own name and icon
+// without a hand-written table. A URL match wins over a handler match.
 function findWebAppEntry(host, entries) {
   var wanted = stripWww(text(host).toLowerCase());
   if (!wanted) return null;
   var source = entries || [];
+  var byHandler = null;
   for (var i = 0; i < source.length; i++) {
     var entry = source[i];
     if (!entry) continue;
     if (execHost(entry.execString) === wanted) return entry;
+    if (!byHandler && hostHasLabel(wanted, execHandlerSlug(entry.execString))) byHandler = entry;
   }
-  return null;
+  return byHandler;
 }
 
 function fallbackName(appId) {

@@ -29,15 +29,22 @@ test("resolves web apps through desktop entries, not a hard-coded table", () => 
 test("bar adapter filters Hyprland events and caches metadata", () => {
   const bar = readFileSync("BarWidget.qml", "utf8");
   assert.match(bar, /WorkspaceModel\.isWorkspaceEvent\(event\.name\)/);
-  assert.match(bar, /metadataCache/);
+  assert.match(bar, /metadataCache: Object\.create\(null\)/);
   assert.match(bar, /onApplicationsChanged/);
+  assert.match(bar, /icon: root\.iconSource\(meta\.iconName, appId\)/);
 });
 
 test("workspace button is a bar click target", () => {
   const button = readFileSync("WorkspaceButton.qml", "utf8");
   assert.match(button, /function triggerPress\(button\)/);
   assert.match(button, /registerClickTarget/);
-  assert.match(button, /acceptedButtons:\s*Qt\.NoButton/);
+  assert.match(button, /acceptedButtons:\s*Qt\.RightButton \| Qt\.MiddleButton/);
+});
+
+test("popover is click-through while fading out", () => {
+  const popover = readFileSync("WorkspacePopover.qml", "utf8");
+  assert.match(popover, /mask:\s*open \? null : emptyMask/);
+  assert.match(popover, /property var emptyMask: Region \{ \}/);
 });
 
 test("popover uses the approved hover contract", () => {

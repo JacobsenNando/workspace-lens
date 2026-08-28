@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs.Commons
 import qs.Ui
 
@@ -6,6 +7,10 @@ PopupCard {
   id: root
 
   property var record: null
+  // While fading out the window is still mapped; an empty mask makes it
+  // click-through so a fast click below the bar reaches the app underneath.
+  readonly property var emptyMask: Region { }
+  mask: open ? null : emptyMask
   readonly property bool scrollable: contentHeight < contentColumn.implicitHeight + verticalContentInset
 
   triggerMode: "hover"
@@ -32,6 +37,7 @@ PopupCard {
         id: appIcon
         source: groupDetails.modelData.icon
         label: groupDetails.modelData.name
+        foreground: groupDetails.foreground
         size: Style.space(10)
       }
 

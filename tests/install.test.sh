@@ -57,7 +57,10 @@ expect_failure "symlinked target" install
 test -L "$target"
 rm "$target"
 
-# Packaged Omarchy files are never a valid destination.
-expect_failure "/usr/share/omarchy" env WORKSPACE_LENS_INSTALL_ROOT=/usr/share/omarchy/plugins bash scripts/install.sh --no-enable
+# Packaged Omarchy files are never a valid destination: the guard must fire
+# before anything touches the filesystem, whatever the permissions.
+message=$(WORKSPACE_LENS_INSTALL_ROOT=/usr/share/omarchy/plugins bash scripts/install.sh --no-enable 2>&1 || true)
+grep -q "Refusing to install under /usr/share/omarchy" <<<"$message"
+test ! -e "/usr/share/omarchy/plugins/$plugin_id"
 
 echo "install.test.sh: ok"

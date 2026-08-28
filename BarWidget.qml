@@ -11,9 +11,10 @@ BarWidget {
   moduleName: "jacobsennando.workspace-lens"
 
   property int refreshSerial: 0
-  // appId -> { name, icon }. Desktop-entry lookups are the expensive part of a
-  // refresh; the answer only changes when the application list does.
-  property var metadataCache: ({})
+  // appId -> { name, iconName }. Desktop-entry lookups are the expensive part
+  // of a refresh and only change with the application list. The icon *path*
+  // is resolved on every refresh so the shell's icon index stays reactive.
+  property var metadataCache: Object.create(null)
   property Item pendingAnchor: null
   property var pendingRecord: null
   property Item activeAnchor: null
@@ -68,7 +69,7 @@ BarWidget {
     var entry = root.desktopEntryFor(key)
     var meta = {
       name: entry ? String(entry.name || "") : "",
-      icon: root.iconSource(entry ? entry.icon : "", key)
+      iconName: entry ? String(entry.icon || "") : ""
     }
     root.metadataCache[key] = meta
     return meta
@@ -83,7 +84,7 @@ BarWidget {
         appId: appId,
         title: String(toplevel.title || ""),
         name: meta.name,
-        icon: meta.icon
+        icon: root.iconSource(meta.iconName, appId)
       }
     })
   }
@@ -166,8 +167,8 @@ BarWidget {
   Connections {
     target: DesktopEntries
     function onApplicationsChanged() {
-      root.metadataCache = {}
-      root.refreshSerial++
+      // Assigning a new object re-evaluates every record binding.
+      root.metadataCache = Object.create(null)
     }
   }
 

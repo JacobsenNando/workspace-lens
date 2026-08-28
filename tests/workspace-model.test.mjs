@@ -40,6 +40,19 @@ test("matches a web-app class to the desktop entry launching that site", () => {
   assert.equal(model.findWebAppEntry("youtube.com", undefined), null);
 });
 
+test("matches handler-launched web apps by slug, preferring a URL match", () => {
+  const entries = [
+    { name: "HEY", icon: "hey", execString: "omarchy-webapp-handler-hey %u" },
+    { name: "Zoom", icon: "zoom", execString: "omarchy-webapp-handler-zoom %u" },
+    { name: "HEY Calendar", icon: "hey", execString: "omarchy-launch-webapp https://app.hey.com/calendar" }
+  ];
+  assert.equal(model.findWebAppEntry("app.hey.com", entries).name, "HEY Calendar");
+  assert.equal(model.findWebAppEntry("hey.com", entries).name, "HEY");
+  assert.equal(model.findWebAppEntry("app.zoom.us", entries).name, "Zoom");
+  assert.equal(model.findWebAppEntry("zoom", entries), null);
+  assert.equal(model.findWebAppEntry("chatgpt.com", entries), null);
+});
+
 test("refreshes only on Hyprland events that change workspace contents", () => {
   for (const name of ["openwindow", "closewindow", "movewindowv2", "windowtitlev2", "workspacev2", "focusedmonv2", "destroyworkspacev2"]) {
     assert.equal(model.isWorkspaceEvent(name), true, name);

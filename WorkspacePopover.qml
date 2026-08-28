@@ -7,6 +7,14 @@ PopupCard {
   id: root
 
   property var record: null
+
+  function tooltipPlainText(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+  }
+
   // While fading out the window is still mapped; an empty mask makes it
   // click-through so a fast click below the bar reaches the app underneath.
   readonly property var emptyMask: Region { }
@@ -61,6 +69,7 @@ PopupCard {
             anchors.right: groupCount.left
             anchors.rightMargin: Style.space(3)
             text: groupDetails.modelData.name
+            textFormat: Text.PlainText
             elide: Text.ElideRight
             color: groupDetails.foreground
             font.family: Style.font.family
@@ -96,6 +105,7 @@ PopupCard {
               anchors.left: parent.left
               anchors.right: parent.right
               text: titleRow.modelData
+              textFormat: Text.PlainText
               elide: Text.ElideRight
               color: groupDetails.foreground
               opacity: 0.75
@@ -110,7 +120,7 @@ PopupCard {
               hoverEnabled: true
               acceptedButtons: Qt.NoButton
               onEntered: if (titleLabel.truncated && groupDetails.barHost)
-                groupDetails.barHost.showTooltip(titleHover, titleLabel.text)
+                groupDetails.barHost.showTooltip(titleHover, root.tooltipPlainText(titleLabel.text))
               onExited: if (groupDetails.barHost)
                 groupDetails.barHost.hideTooltip(titleHover)
             }

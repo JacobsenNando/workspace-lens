@@ -56,3 +56,11 @@ test("popover uses the approved hover contract", () => {
   assert.doesNotMatch(popover, /\.activate\s*\(/);
   assert.doesNotMatch(popover, /\.close\s*\(/);
 });
+
+test("popover renders application-controlled text as plain text", () => {
+  const popover = readFileSync("WorkspacePopover.qml", "utf8");
+  assert.match(popover, /id:\s*groupName[\s\S]*?textFormat:\s*Text\.PlainText/);
+  assert.match(popover, /id:\s*titleLabel[\s\S]*?textFormat:\s*Text\.PlainText/);
+  assert.match(popover, /function tooltipPlainText\(value\)/);
+  assert.match(popover, /showTooltip\(titleHover, root\.tooltipPlainText\(titleLabel\.text\)\)/);
+});

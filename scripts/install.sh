@@ -4,6 +4,7 @@ set -euo pipefail
 plugin_id="jacobsennando.workspace-lens"
 runtime_files=(
   manifest.json
+  LICENSE
   BarWidget.qml
   WorkspaceModel.js
   WorkspaceButton.qml
@@ -85,6 +86,11 @@ if [[ -e "$target" ]]; then
     printf 'Refusing to replace unknown existing plugin: %s\n' "$target" >&2
     exit 1
   fi
+  if [[ -e "$target/.git" ]]; then
+    printf 'Workspace Lens at %s is a git checkout managed by Omarchy.\n' "$target" >&2
+    printf 'Update it with: omarchy plugin update %s\n' "$plugin_id" >&2
+    exit 1
+  fi
   had_previous=true
 fi
 
@@ -92,6 +98,14 @@ staging_dir=$(mktemp -d "$install_root/.${plugin_id}.install.XXXXXX")
 for runtime_file in "${runtime_files[@]}"; do
   cp -- "$repo_root/$runtime_file" "$staging_dir/$runtime_file"
 done
+
+# Same checks the shell applies before loading a plugin; skipped only where the
+# Omarchy CLI is absent (CI, isolated test roots).
+if command -v omarchy-plugin-validate >/dev/null 2>&1; then
+  omarchy-plugin-validate "$staging_dir"
+else
+  printf 'omarchy-plugin-validate not found; skipping manifest validation.\n' >&2
+fi
 
 if [[ "$had_previous" == true ]]; then
   backup_dir=$(mktemp -d "$install_root/.${plugin_id}.backup.XXXXXX")

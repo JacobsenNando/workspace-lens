@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Manifest contract
+        run: |
+          jq -e '.schemaVersion == 1 and .id == "jacobsennando.workspace-lens" and (.kinds == ["bar-widget"]) and .omarchy.clonedFrom == "omarchy.workspaces"' manifest.json
+          test -f "$(jq -r .entryPoints.barWidget manifest.json)"
+          test -z "$(find . -path ./.git -prune -o -type l -print)"
+      - name: Model and contract tests
+        run: node --test tests/*.test.mjs
+      - name: Installer test
+        run: bash tests/install.test.sh

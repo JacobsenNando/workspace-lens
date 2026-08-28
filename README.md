@@ -11,6 +11,12 @@ Hyprland workspace visible directly from the bar.
 
 ## Installation
 
+Install and enable the public plugin with:
+
+```bash
+omarchy plugin add https://github.com/JacobsenNando/workspace-lens.git --enable
+```
+
 From a checkout of this repository, install the plugin into your user plugin
 directory with:
 
@@ -54,6 +60,6 @@ rm -rf ~/.config/omarchy/plugins/jacobsennando.workspace-lens
 
 ## Status
 
-Implemented, with automated installer and model checks. Live Omarchy/Hyprland
-runtime and visual verification remain pending. The approved direction is in
-the [design specification](docs/superpowers/specs/2026-08-18-workspace-lens-design.md).
+Implemented, with automated installer and model checks. The WhatsApp and
+Discord web-app icons were visually verified after restarting Omarchy Shell.
+The approved direction is in the [design specification](docs/superpowers/specs/2026-08-18-workspace-lens-design.md).

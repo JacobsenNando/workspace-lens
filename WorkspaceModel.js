@@ -7,6 +7,24 @@ function normalizeAppId(value) {
   return id.slice(-8) === ".desktop" ? id.slice(0, -8) : id;
 }
 
+function hyprlandAppId(toplevel) {
+  var value = toplevel || {};
+  var attached = value.HyprlandToplevel || {};
+  var handle = attached.handle || value;
+  var ipc = handle.lastIpcObject || {};
+  var wayland = value.wayland || {};
+  return text(ipc.class) || text(value.appId) || text(wayland.appId);
+}
+
+function webAppIconPath(appId) {
+  var id = normalizeAppId(appId);
+  if (id.indexOf("brave-web.whatsapp.com") === 0)
+    return "/usr/share/icons/hicolor/256x256/apps/whatsapp.png";
+  if (id.indexOf("brave-discord.com") === 0)
+    return "/usr/share/icons/hicolor/256x256/apps/omarchy-discord.png";
+  return "";
+}
+
 function fallbackName(appId) {
   var value = normalizeAppId(appId);
   var leaf = value.split(".").pop() || "application";

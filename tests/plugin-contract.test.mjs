@@ -19,10 +19,10 @@ test("bar adapter has no polling process", () => {
 });
 
 test("uses the official system WhatsApp asset for Brave web-app ids", () => {
-  const qml = readFileSync("BarWidget.qml", "utf8");
-  assert.match(qml, /function systemIconPath\(appId\)/);
-  assert.match(qml, /brave-web\.whatsapp\.com/);
-  assert.match(qml, /\/usr\/share\/icons\/hicolor\/256x256\/apps\/whatsapp\.png/);
+  const model = readFileSync("WorkspaceModel.js", "utf8");
+  assert.match(model, /function webAppIconPath\(appId\)/);
+  assert.match(model, /brave-web\.whatsapp\.com/);
+  assert.match(model, /\/usr\/share\/icons\/hicolor\/256x256\/apps\/whatsapp\.png/);
 });
 
 test("popover uses the approved hover contract", () => {

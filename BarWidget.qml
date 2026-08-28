@@ -53,16 +53,11 @@ BarWidget {
   }
 
   function systemIconPath(appId) {
-    var id = String(appId || "").trim().toLowerCase()
-    if (id.indexOf("brave-web.whatsapp.com") === 0)
-      return "/usr/share/icons/hicolor/256x256/apps/whatsapp.png"
-    return ""
+    return WorkspaceModel.webAppIconPath(appId)
   }
 
   function appIdFor(toplevel) {
-    var ipc = toplevel && toplevel.lastIpcObject ? toplevel.lastIpcObject : {}
-    var wayland = toplevel && toplevel.wayland ? toplevel.wayland : null
-    return String((toplevel && toplevel.appId) || ipc.class || (wayland ? wayland.appId : "") || "")
+    return WorkspaceModel.hyprlandAppId(toplevel)
   }
 
   function rawWindows(workspace) {

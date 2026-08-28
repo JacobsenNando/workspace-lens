@@ -8,6 +8,27 @@ test("normalizes desktop ids", () => {
   assert.equal(model.normalizeAppId("  Org.GNOME.Nautilus.desktop  "), "org.gnome.nautilus");
 });
 
+test("prefers the Hyprland IPC class for Brave web apps", () => {
+  const toplevel = {
+    appId: "brave-browser",
+    HyprlandToplevel: {
+      handle: { lastIpcObject: { class: "brave-discord.com__channels_@me-Default" } }
+    }
+  };
+  assert.equal(model.hyprlandAppId(toplevel), "brave-discord.com__channels_@me-Default");
+});
+
+test("resolves system icons for WhatsApp and Discord Brave web apps", () => {
+  assert.equal(
+    model.webAppIconPath("brave-web.whatsapp.com__-Default"),
+    "/usr/share/icons/hicolor/256x256/apps/whatsapp.png"
+  );
+  assert.equal(
+    model.webAppIconPath("brave-discord.com__channels_@me-Default"),
+    "/usr/share/icons/hicolor/256x256/apps/omarchy-discord.png"
+  );
+});
+
 test("builds an empty persistent workspace", () => {
   assert.deepEqual(
     JSON.parse(JSON.stringify(model.buildWorkspace(4, [], 2, 3))),
